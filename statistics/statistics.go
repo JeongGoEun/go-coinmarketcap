@@ -15,6 +15,7 @@ import (
 
 	coinmarketcap "github.com/hexoul/go-coinmarketcap"
 	"github.com/hexoul/go-coinmarketcap/types"
+	util "github.com/hexoul/go-coinmarketcap/util"
 )
 
 var (
@@ -22,16 +23,6 @@ var (
 )
 
 func init() {
-	logPath := "./report.log"
-	for _, val := range os.Args {
-		arg := strings.Split(val, "=")
-		if len(arg) < 2 {
-			continue
-		} else if arg[0] == "-logpath" {
-			logPath = arg[1]
-		}
-	}
-
 	// Initialize logger
 	logger = log.New()
 
@@ -40,7 +31,7 @@ func init() {
 	logger.Formatter = &log.JSONFormatter{
 		TimestampFormat: timestampFormat,
 	}
-	if f, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err == nil {
+	if f, err := os.OpenFile("./report.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err == nil {
 		logger.Out = io.MultiWriter(f, os.Stdout)
 	} else {
 		fmt.Print("Failed to open log file: you can miss important log")
@@ -75,9 +66,17 @@ func GatherTokenMetric(symbol, addr string, job *gocron.Job) {
 // url: Target url to scraper
 // c: Scraper
 func taskGatherTokenMetric(symbol, addr string) {
-	var holders, txns string
+	var holders, txns, transfers string
 
-	// Initialize collector
+	// Chromedp
+	util.InvokeChromedp(
+		`https://etherscan.io/token/0xB8c77482e45F1F44dE1745F52C74426C631bDD52`,
+		`#ContentPlaceHolder1_divSummary td span#totaltxns`,
+		&transfers,
+		10,
+	)
+
+	// Scraper
 	url1 := "https://etherscan.io/token/" + addr
 	url2 := "https://etherscan.io/address/" + addr
 
@@ -97,9 +96,10 @@ func taskGatherTokenMetric(symbol, addr string) {
 	c2.Visit(url2)
 
 	logger.WithFields(log.Fields{
-		"symbol":  symbol,
-		"holders": holders,
-		"txns":    txns,
+		"symbol":    symbol,
+		"holders":   holders,
+		"transfers": transfers,
+		"txns":      txns,
 	}).Info("GatherTokenMetric")
 }
 
