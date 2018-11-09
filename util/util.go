@@ -79,7 +79,7 @@ func DoReq(req *http.Request) (body []byte, err error) {
 }
 
 // InvokeChromedp for scraping AJAX page
-func InvokeChromedp(url, qeury string, buffer *string, sec int) (err error) {
+func InvokeChromedp(url, qeury string, sec int, buffer *string) (err error) {
 	// Create context
 	ctxt, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -99,13 +99,12 @@ func InvokeChromedp(url, qeury string, buffer *string, sec int) (err error) {
 		return
 	}
 
-	// shutdown chrome
+	// Shutdown chrome
 	if err = dp.Shutdown(ctxt); err != nil {
 		return
 	}
 
-	// wait for chrome to finish
-	if err = dp.Wait(); err != nil {
-		return
-	}
+	// Wait for chrome to finish
+	err = dp.Wait()
+	return
 }
