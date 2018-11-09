@@ -15,7 +15,7 @@ import (
 
 	coinmarketcap "github.com/hexoul/go-coinmarketcap"
 	"github.com/hexoul/go-coinmarketcap/types"
-	util "github.com/hexoul/go-coinmarketcap/util"
+	"github.com/hexoul/go-coinmarketcap/util"
 )
 
 var (
